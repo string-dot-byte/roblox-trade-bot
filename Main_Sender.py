@@ -3,14 +3,14 @@ import requests, time, json, random
 import dateutil.parser as dp
 from requests.auth import HTTPProxyAuth
 
-ownerId = 1642967825 # YOUR ROBLOX ACCOUNT ID
-cookie = 'YOURCOOKIE'
+__ownerId = 93937677 #YOUR ACCOUNT'S ID
+cookie = 'YOUR_COOKIE_HERE'
 ownersUrl = 'https://inventory.roblox.com/v2/assets/' # %d/owners?limit=10
 sendTradeUrl = 'https://trades.roblox.com/v1/trades/send'
 canTrade = 'https://trades.roblox.com/v1/users/' # %d/can-trade-with
 
 proxies = [
-    
+	# INSERT PROXIES HERE AS LIST
 ]
 
 AlreadyTradingWith = {}
@@ -39,7 +39,6 @@ def recentlyOnline(USERID):
     return final_time/259200 <= 1
 
 def CanUserTrade(USERID):
-    #return True
     r = requests.get(canTrade + str(USERID) + '/can-trade-with', headers={'cookie': f'.ROBLOSECURITY={cookie}' + ';'}, proxies={'https': getProxy()}).json()
     if 'errors' in r:
         print('Delaying for 7 seconds due to rate limitation')
@@ -56,7 +55,6 @@ OfferItem3 = input('Item UAID #3 you are offering (optional) > ')
 OfferItem4 = input('Item UAID #4 you are offering (optional) > ')
 
 Requesting1 = input('Item ID #1 you are requesting > ')
-
 
 itemId = Requesting1
 
@@ -86,7 +84,7 @@ def sendTrade(userId, request):
     data = json.dumps({
         "offers": [
             {
-                "userId": ownerId,
+                "userId": __ownerId,
                 "userAssetIds": ItemsSending,
                 "robux": 0
             },
@@ -101,9 +99,7 @@ def sendTrade(userId, request):
     })
 
     loadXCSRF_Token()
-    req = requests.post("https://trades.roblox.com/v1/trades/send", data=data,  headers={'cookie': f'.ROBLOSECURITY={cookie}' + ';', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': XCSRF_Token}, proxies={'https': getProxy()}).json()
-    if 'message' in req:
-        print(req)
+    requests.post("https://trades.roblox.com/v1/trades/send", data=data,  headers={'cookie': f'.ROBLOSECURITY={cookie}', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': XCSRF_Token}, proxies={'https': getProxy()}).json()
   
 
 index = 0
@@ -146,7 +142,6 @@ while True:
             f.write(json.dumps(whitelist))
             f.close()
 
-            print('SENDING TRADE')
             def TRADE():
                 sendTrade(x['owner']['id'], x['id'])
             threading.Thread(target=TRADE, args=()).start()
