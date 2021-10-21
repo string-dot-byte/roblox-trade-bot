@@ -43,7 +43,7 @@ def CanUserTrade(USERID):
     if 'errors' in r:
         print('Delaying for 7 seconds due to rate limitation')
         time.sleep(7)
-        return False
+        return CanUserTrade(USERID)
     
     if r['canTrade'] == True:
         return True
