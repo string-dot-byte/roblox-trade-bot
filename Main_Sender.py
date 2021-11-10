@@ -1,17 +1,18 @@
-import threading
-import requests, time, json, random
+import requests, time, json, random, threading
 import dateutil.parser as dp
 from requests.auth import HTTPProxyAuth
+from itertools import cycle
 
-__ownerId = 93937677 #YOUR ACCOUNT'S ID
+__ownerId = 0000000 #YOUR ACCOUNT'S ID
 cookie = 'YOUR_COOKIE_HERE'
 ownersUrl = 'https://inventory.roblox.com/v2/assets/' # %d/owners?limit=10
 sendTradeUrl = 'https://trades.roblox.com/v1/trades/send'
 canTrade = 'https://trades.roblox.com/v1/users/' # %d/can-trade-with
 
-proxies = [
+
+proxies = cycle(iter([
 	# INSERT PROXIES HERE AS LIST
-]
+]))
 
 AlreadyTradingWith = {}
 
@@ -26,17 +27,16 @@ with open('whitelist.txt', 'r') as filew:
 whitelist = json.loads(w)
 
 def getProxy():
-    return proxies[random.randrange(len(proxies))]
+    return next(proxies) #proxies[random.randrange(len(proxies))]
 
 def recentlyOnline(USERID):
     userlastonline = requests.get(url='https://api.roblox.com/users/' + str(USERID) + '/onlinestatus/', proxies={'https': getProxy()}).json()
     lastonline = userlastonline['LastOnline']
-	#print(lastonline)
     parsed_time = dp.parse(lastonline)
     time_in_seconds = parsed_time.timestamp()
     final_time = time.time()-time_in_seconds
 
-    return final_time/259200 <= 1
+    return final_time/345600 <= 1
 
 def CanUserTrade(USERID):
     r = requests.get(canTrade + str(USERID) + '/can-trade-with', headers={'cookie': f'.ROBLOSECURITY={cookie}' + ';'}, proxies={'https': getProxy()}).json()
@@ -66,6 +66,12 @@ if OfferItem2.isnumeric():
         ItemsSending.insert(1, int(OfferItem3))
         if OfferItem4.isnumeric():
 	        ItemsSending.insert(1, int(OfferItem4))
+         
+SendToWhitelist = input('Send to whitelist? (yes/no) > ')
+if SendToWhitelist.lower() in ['true', 't', 'y', 'ye', 'yes', 'yeah', 'yup']:
+    SendToWhitelist = True
+else:
+    SendToWhitelist = False
 
 
 XCSRF_Token = None
@@ -96,11 +102,12 @@ def sendTrade(userId, request):
                 "robux": 0
             }
         ]
-    })
+    }, separators=(',', ':'))
 
     loadXCSRF_Token()
     requests.post("https://trades.roblox.com/v1/trades/send", data=data,  headers={'cookie': f'.ROBLOSECURITY={cookie}', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': XCSRF_Token}, proxies={'https': getProxy()}).json()
   
+
 
 index = 0
 owners = requests.get(ownersUrl + str(itemId) + '/owners?limit=100', headers={'cookie': f'.ROBLOSECURITY={cookie}' + ';'}).json()
@@ -121,7 +128,7 @@ while True:
                 print('Passed', ownerId)
                 continue
                  
-            if not ownerId in whitelist:   
+            if not ownerId in whitelist:
                 if not recentlyOnline(x['owner']['id']):
                     indexedUsers[x['owner']['id']] = True
                     continue
@@ -129,17 +136,19 @@ while True:
                     indexedUsers[x['owner']['id']] = True
                     continue
             else:
+                if not SendToWhitelist:
+                    continue
                 print(ownerId, 'whitelisted')
             
             AlreadyTradingWith[ownerId] = True
             
             f = open('indexed.txt', 'w')
-            f.write(json.dumps(indexedUsers))
+            f.write(json.dumps(indexedUsers, separators=(',', ':')))
             f.close()
             
             whitelist[x['owner']['id']] = True
             f = open('whitelist.txt', 'w')
-            f.write(json.dumps(whitelist))
+            f.write(json.dumps(whitelist, separators=(',', ':')))
             f.close()
 
             def TRADE():
